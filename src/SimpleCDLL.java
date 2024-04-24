@@ -27,7 +27,7 @@ public class SimpleCDLL<T> implements SimpleList {
   int size;
 
   /**
-   * 
+   * Counter for structural modifications in list.
    */
   int listCounter = 0;
 
@@ -68,7 +68,7 @@ public class SimpleCDLL<T> implements SimpleList {
        * Counter to keep track of the number of changes to the list. 
        * When you create an iterator, you save that number.
        */
-      int itCounter = listCounter;
+      int itCounter = SimpleCDLL.this.listCounter;
 
       /**
        * The cursor is between neighboring values, so we start links
@@ -92,6 +92,11 @@ public class SimpleCDLL<T> implements SimpleList {
           throw new ConcurrentModificationException();
         }
       } // failFast()
+
+      private void incrementCounters() {
+        ++SimpleCDLL.this.listCounter;
+        ++this.itCounter;
+      } // incrementCounters()
 
       public void add(T val) throws UnsupportedOperationException {        
         // Fail-fast
@@ -121,8 +126,8 @@ public class SimpleCDLL<T> implements SimpleList {
         ++this.pos;
 
         // Update Counters
-        ++itCounter;
-        ++listCounter;
+        incrementCounters();
+
       } // add(T)
 
       public boolean hasNext() {
@@ -211,9 +216,17 @@ public class SimpleCDLL<T> implements SimpleList {
           --this.pos;
         } // if
 
+        // Check if cursors are pointing to dummy
+        if (this.prev == SimpleCDLL.this.dummy) {
+          this.prev = SimpleCDLL.this.dummy.prev;
+        }
+        if (this.next == SimpleCDLL.this.dummy) {
+          this.next = SimpleCDLL.this.dummy.next;
+        }
+
         // Update the front
-        if (SimpleCDLL.this.dummy == this.update) {
-          SimpleCDLL.this.dummy = this.update.next;
+        if (SimpleCDLL.this.dummy.next == this.update) {
+          SimpleCDLL.this.dummy.next = this.update.next;
         } // if
 
         // Do the real work
@@ -224,8 +237,7 @@ public class SimpleCDLL<T> implements SimpleList {
         this.update = null;
                 
         // Update Counters
-        ++itCounter;
-        ++listCounter;
+        incrementCounters();
 
       } // remove()
 
@@ -239,10 +251,6 @@ public class SimpleCDLL<T> implements SimpleList {
         } // if
         // Do the real work
         this.update.value = val;
-
-        // Update Counters
-        ++itCounter;
-        ++listCounter;
 
       } // set(T)
     };
